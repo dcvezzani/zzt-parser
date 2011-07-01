@@ -1,14 +1,12 @@
-require File.dirname(__FILE__) + "/../lib/zzt_parser_utils"
+require File.dirname(__FILE__) + "/../models/zzt_base"
 
-class ZZTObject
-  include ZZTParserUtils
+class ZZTObject < ZZTBase
 
   attr_accessor :x, :y, :x_step, :y_step, :cycle, :parameters
   attr_accessor :under_obj_status, :over_obj_status
   attr_accessor :under_obj_code, :under_obj_color, :unk_01
   attr_accessor :program_pos, :data_len, :binded_obj_status
   attr_accessor :unk_02, :data, :object_id
-  attr_writer :parser
 
 # Followed by objects, creatures, etc. in the following format:
 # 1     X-coordinate on board
@@ -29,16 +27,13 @@ class ZZTObject
 # ?     Only if this is an object/scroll: Program/text according to size
 
   def initialize(parser, object_id)
-    @parser = parser
+    super
+    self.parsers << parser
     @object_id = object_id
   end
 
   def self.parse(parser, object_id)
     obj = ZZTObject.new(parser, object_id)
-
-    if(obj.x == 42)
-      x = 3+4
-    end
 
     obj.read(:n, "x", 1)
     obj.read(:n, "y", 1)
@@ -64,28 +59,4 @@ class ZZTObject
   def data(escape=false)
     (escape) ?  @data.gsub(/\r/, "\n") : @data
   end
-
-  def read(type, attr, len, label=nil)
-    label ||= attr.to_s
-    case(type)
-    when :string, :s  then read_string(attr, len, label)
-    when :number, :n  then read_number(attr, len, label)
-    when :bytes,  :b  then read_bytes(attr, len, label)
-    end
-
-    self.send(attr)
-  end
-
-  def read_string(attr, len, label)
-    self.send("#{attr}=", @parser.read_string(len, "#{label}", len))
-  end
-
-  def read_number(attr, len, label)
-    self.send("#{attr}=", @parser.read_number(len, false, "#{label}"))
-  end
-
-  def read_bytes(attr, len, label)
-    self.send("#{attr}=", @parser.read_bytes(len, "#{label}"))
-  end
-
 end

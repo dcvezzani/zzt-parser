@@ -1,0 +1,523 @@
+Padding preferably with 0h.
+
+Bytes Description
+----- -----------
+2     FFFFh verifies that this is a ZZT file
+2     Number of boards minus 1
+2     Starting ammo
+2     Starting gems
+7     Starting keys (Nonzero if player has it)
+      Order: blue, green, cyan, red, purple, yellow, white
+2     Starting health
+2     Starting board
+2     Starting torches
+2     Number of cycles until torch goes out
+2     Number of cycles player is still energized
+2    *Unknown
+2     Starting score
+1     Length of world title
+20    World title
+210   Places for 10 flags that are set
+      Flags in following format:
+      1 byte = length of flag name
+      20 bytes = flag name
+      If the flag "SECRET" is set, then this is a protected file.
+2     Time passed
+2    *Unknown
+1     If this byte is nonzero then this is a savegame
+
+The following 247 bytes were not used by normal ZZT, ZZTAE v2.0 will use
+them in the following way:
+4     "ZZTÆ"
+13    Fontfile
+40    Author
+40    World title
+40    E-mail
+60    Website
+1     Genre 1
+1     Genre 2
+1     Genre 3
+40    Custom genre
+1     Total files for game (if the game spans multiple worlds)
+1     Number of this file
+5    *Unused
+
+Followed by the boards in exactly the same format as the *.BRD files
+�
+Format of *.BRD files (ZZT)
+=====================
+
+Coordinates are 1-based, ranging from (1,1) to (60,25).
+
+Bytes Description
+----- -----------
+2     Board size (excluding these 2 bytes)
+1     Length of board title
+34    Board title
+16   *Unknown
+
+Followed by the actual board design:
+1     How many times the next thing repeats
+1     Thing
+1     Color (The character for text)
+(This repeats for a board of 60x25)
+
+After the board design:
+1     Max shots
+1     Darkness
+1     Board to North
+1     Board to South
+1     Board to West
+1     Board to East
+1     Re-enter when zapped
+1     Size of message on message row
+58    Message on message row
+1     X-coordinate of the player
+1     Y-coordinate of the player
+2     Time limit in seconds
+16   *Unknown
+2     Number of things with parameters minus 1
+
+Followed by objects, creatures, etc. in the following format:
+1     X-coordinate on board
+1     Y-coordinate on board
+2     Current horizontal movement in steps a cycle
+2     Current vertical movement in steps a cycle
+2     Cycle number
+3     Parameters
+2     Stat # of the thing behind this thing (used for centipedes, -1 is no linkage)
+2     Stat # of the thing in front of this thing (used for centipedes, -1 is no linkage)
+1     Code for thing under this thing
+1     Color for thing under this thing
+4    *Unknown
+2     Position in program as byte number minus 1, FFFFh = Program ended
+2     Size for object/scroll
+2     Stat # of the thing this thing is #binded to
+6    *Unknown
+?     Only if this is an object/scroll: Program/text according to size
+
+This comes after all the boards (footer):
+2     Length of comments
+?     Comments
+
+�
+Codes for genres (ZZTAE v2.0)
+================
+
+Code Thing
+---- -------------------
+ 000 (None)
+ 001 24hozzt
+ 002 3D
+ 003 Action
+ 004 Adventure
+ 005 Arcade
+ 006 Art
+ 007 Catalog
+ 008 Cinema
+ 009 Collection
+ 010 Comedy
+ 011 Demo
+ 012 Display
+ 013 Dungeon
+ 014 Engine
+ 015 Font
+ 016 Help
+ 017 Horror
+ 018 Interactive Cinema
+ 019 Magazine
+ 020 Miscellaneous
+ 021 Music
+ 022 Puzzle
+ 023 Random
+ 024 Remake
+ 025 Rpg
+ 026 Sci-Fi
+ 027 Series
+ 028 Shooter
+ 029 Side Scroller
+ 030 Simulation
+ 031 Sport
+ 032 Strategy
+ 033 Trippy
+ 034 Update
+ 035 Various
+
+�
+Codes for things (ZZT)
+================
+
+Parameters:
+. = None
+A = Ascii char
+D = Destination
+E = sEnsitivity
+F = Firing rate (add 128 if firing stars)
+I = Intelligence
+M = start tiMe
+O = Owner (0=player, 1=enemy)
+P = firing Period
+R = Rate
+S = Speed
+T = rest Time
+U = fUse length (0=normal bomb)
+V = deViance
+X = uses X-/y-step bytes
+
+Code Thing                        Name in OOP     Parameters 123 Cycle Char
+---- ---------------------------- --------------- -------------- ----- ----
+ 000 Space                        empty                                00
+ 001 Board edge                                                        00
+ 002
+ 003 Monitor                      monitor                              00
+ 004 Player                       player                     ... 1     02
+ 005 Ammo                         ammo                                 84
+ 006 Torch                        torch                                9D
+ 007 Gem                          gem                                  04
+ 008 Key                          key                                  0C
+ 009 Door                         door                                 0A
+ 010 Scroll                       scroll                     ... 1     E8
+ 011 Passage                      passage                    ..D 1     F0
+ 012 Duplicator                   duplicator      X          .R. 1     FA
+ 013 Bomb                         bomb                       U.. 6     0B
+ 014 Energizer                    energizer                            7F
+ 015 Star                         star            X          O.. 1     --
+ 016 Clockwise Conveyor           clockwise                      1     --
+ 017 Counter-Clockwise Conveyor   counter                        1     --
+ 018 Bullet                       bullet          X          O.. 1     F8
+ 019 Water                        water                                B0
+ 020 Forest                       forest                               B0
+ 021 Solid Wall                   solid                                DB
+ 022 Normal Wall                  normal                               D2
+ 023 Breakable Wall               breakable                            B1
+ 024 Boulder                      boulder                              FE
+ 025 Slider North-South           sliderns                             12
+ 026 Slider East-West             sliderew                             1D
+ 027 Fake Wall                    fake                                 B2
+ 028 Invisible Wall               invisible                            00
+ 029 Blink Wall                   blinkwall       X          MP. 1     --
+ 030 Transporter                  transporter     X                    --
+ 031 Line                         line                                 --
+ 032 Ricochet                     ricochet                             2A
+ 033 Horizontal Blinkwall Ray                                          CD
+ 034 Bear                         bear                       E.. 3     99
+ 035 Ruffian                      ruffian                    IT. 3     05
+ 036 Object                       object          X          A.. 3     --
+ 037 Slime                        slime                      .S. 3     2A
+ 038 Shark                        shark                      I.. 3     5E
+ 039 Spinning Gun                 spinninggun     X          IF. 3     --
+ 040 Pusher                       pusher          X          ... 4     --
+ 041 Lion                         lion                       I.. 2     EA
+ 042 Tiger                        tiger                      IF. 2     E3
+ 043 Vertical Blinkwall Ray                                            BA
+ 044 Centipede Head               head            X          IV. 2     E9
+ 045 Centipede Segment            segment                    ... 2     4F
+ 046
+ 047 Blue Text
+ 048 Green Text
+ 049 Cyan Text
+ 050 Red Text
+ 051 Purple Text
+ 052 Brown Text
+ 053 Black Text
+�
+File format of *.SZT and *.SAV files (SuperZZT)
+====================================
+
+Bytes Description
+----- -----------
+2     FEFFh verifies that this is a SuperZZT file
+2     Number of boards minus 1
+2     Starting ammo
+2     Starting gems
+7     Starting keys (Nonzero if player has it)
+2     Starting health
+2     Starting board
+2     Unknown
+2     Number of cycles player is still energized
+2     Unknown
+2     Starting score
+1     Length of world title
+20    World title
+336   Places for 16 flags that are set
+      Flags in following format:
+      1 byte = length of flag name
+      20 bytes = flag name
+      If the flag "SECRET" is set, then this is a protected file.
+2     Time passed
+2     Unknown
+1     If this byte is nonzero then this is a savegame
+2     Starting stones
+633   Unused
+
+Followed by the boards in exactly the same format as the *.BRD files
+�
+Format of *.BRD files (SuperZZT)
+=====================
+
+2     Board size (excluding these two bytes)
+1     Length of board title
+60    Board title
+
+Followed by the actual board design:
+1     How many times the next thing repeats
+1     Thing
+1     Color
+(This repeats for a board of 96x80)
+
+After the board design:
+1     Max shots
+1     Board to North
+1     Board to South
+1     Board to West
+1     Board to East
+1     Re-enter when zapped
+4     Unknown
+1     X-coordinate of the player (?)
+1     Y-coordinate of the player (?)
+2     Time limit in seconds
+14    Unknown
+2     Number of things with parameters minus 1
+      NOTE: There can never be 0 things with parameters: there always is a
+            player present on every board and the player has parameters.
+
+Followed by objects, creatures, etc. in the following format:
+1     X-coordinate on board
+1     Y-coordinate on board
+2     Current horizontal movement in steps a cycle (signed integer)
+2     Current vertical movement in steps a cycle (signed integer)
+2     Cycle number
+3     Parameters
+4     Unknown
+1     Code for thing under this thing
+1     Color for thing under this thing
+4     Unknown
+2     Position in program as byte number minus 1, 65535 = Program ended
+2     Size for object/scroll
+?     Only if this is an object/scroll: Program/text according to size
+
+�
+Codes for things (SuperZZT)
+================
+
+* = From 1 to 9 (0 to 8 in file storage)
+
+Code Thing                               Parameters          Name in OOP
+---- -------------------                 ------------------  ---------------
+ 000 Space                                                   empty
+ 001 Board edge (Internal use)
+ 002
+ 003 Monitor (Internal use)              ???                 monitor
+ 004 Player                              ???                 player
+ 005 Ammo                                                    ammo
+ 006
+ 007 Gem                                                     gem
+ 008 Key                                                     key
+ 009 Door                                                    door
+ 010 Scroll                                                  scroll
+ 011 Passage                                                 passage
+ 012 Duplicator                          Rate*,Source dir    duplicator
+ 013 Bomb                                                    bomb
+ 014 Energizer                                               energizer
+ 015
+ 016 Clockwise Conveyor                                      clockwise
+ 017 Counter-Clockwise Conveyor                              counter
+ 018
+ 019 Lava                                                    lava
+ 020 Forest                                                  forest
+ 021 Solid Wall                                              solid
+ 022 Normal Wall                                             normal
+ 023 Breakable Wall                                          breakable
+ 024 Boulder                                                 boulder
+ 025 Slider North-South                                      sliderns
+ 026 Slider East-West                                        sliderew
+ 027 Fake Wall                                               fake
+ 028 Invisible Wall                                          invisible
+ 029 Blink Wall                          Start*,Period*,Dir  blinkwall
+ 030 Transporter                         Dir,Animation       transporter
+ 031 Line                                                    line
+ 032 Ricochet                                                ricochet
+ 033
+ 034 Bear                                Sensitivity*        bear
+ 035 Ruffian                             Intell*,Rest time*  ruffian
+ 036 Object                              Char,Locked         object
+ 037 Slime                               Movement speed*     slime
+ 038
+ 039 Spinning Gun                        Intell*,Rate*,Type  spinninggun
+ 040 Pusher                              Dir                 pusher
+ 041 Lion                                Intell*             lion
+ 042 Tiger                               Intell*,Rate*,Type  tiger
+ 043
+ 044 Centipede Head                      Intell*,Deviance*   head
+ 045 Centipede Segment                                       segment
+ 046
+ 047 Floor                                                   floor
+ 048 Water North                                             watern
+ 049 Water South                                             waters
+ 050 Water West                                              waterw
+ 051 Water East                                              watere
+ 052
+ 053
+ 054
+ 055
+ 056
+ 057
+ 058
+ 059 Roton                               Intell*,Switch*     roton
+ 060 Dragon Pup                          Intell*,Switch*     dragonpup
+ 061 Pairer                              Intell*             pairer
+ 062 Spider                              Intell*             spider
+ 063 Web                                                     web
+ 064 Stone                                                   stone
+ 065
+ 066
+ 067
+ 068
+ 069 Bullet                              Dir,Type            bullet
+ 070 Horizontal Blink Wall Ray
+ 071 Vertical Blink Wall Ray
+ 072 Star                                Life                star
+ 073 Blue text (Color is character)
+ 074 Green text (Color is character)
+ 075 Cyan text (Color is character)
+ 076 Red text (Color is character)
+ 077 Purple text (Color is character)
+ 078 Brown text (Color is character)
+ 079 Black text (Color is character)
+ 080 Blinking Black text (Color is character) \
+ 081 Blinking Blue text (Color is character)  |
+ 082 Blinking Green text (Color is character) |
+ 083 Blinking Cyan text (Color is character)  } Not sure if this works.
+ 084 Blinking Red text (Color is character)   |
+ 085 Blinking Purple text (Color is character)|
+ 086 Blinking Brown text (Color is character) |
+ 087 Blinking Grey text (Color is character)  /
+�
+Built-in labels
+---------------
+:touch
+:shot
+:bombed
+:thud
+:energize
+
+Built-in flags
+--------------
+alligned
+contact
+blocked [direction]
+energized
+
+Directions
+----------
+n
+s
+w
+e
+i
+north
+south
+west
+east
+idle
+seek
+flow
+rnd
+rndns
+rndne
+
+Direction pre-fixes
+-------------------
+cw
+ccw
+rndp
+opp
+
+Colors
+------
+blue
+green
+cyan
+red
+purple
+yellow
+white
+
+Counters
+--------
+ammo
+gems
+health
+score
+time
+torches (ZZT only)
+z (the Stones in SuperZZT)
+
+Color encoding
+--------------
+This works just like in the video memory:
+
+IF ForegroundColor > 15 THEN ForegroundColor -- 16, BackgroundColor ++ 8
+ColorCode = BackgroundColor * 16 + ForegroundColor
+
+Some examples: Blinking red on dark green  =  28 on 2  =  172
+               Red on dark green           =  12 on 2  =  44
+               Dark red on dark green      =  4 on 2   =  36
+
+Program commands
+----------------
+[string]
+@[objectname]
+/[direction]
+?[direction]
+:[label]
+'[string]
+$[string]
+![label];[string]
+!-filename;[string]
+#[label]
+#[objectname]:[label]
+#BECOME ([color]) [thing]
+#BIND [objectname]
+#CHANGE ([color]) [thing] ([color]) [thing]
+#CHAR [number]
+#CLEAR [flag]
+#CYCLE [number]
+#DIE
+#END
+#ENDGAME
+#GIVE [counter] [number]
+#GO [direction]
+#IDLE
+#IF [flag] (THEN) [label|command]
+#IF ANY ([color]) [thing] (THEN) [label|command]
+#IF NOT [flag] (THEN) [label|command]
+#IF NOT ANY ([color]) [thing] (THEN) [label|command]
+#LOCK
+#PLAY [string]
+#PUT [direction] ([color]) [thing]
+#RESTART
+#RESTORE [label]
+#SEND [label]
+#SEND [objectname]:[label]
+#SET [flag]
+#SHOOT [direction]
+#TAKE [counter] [number] ([label|command])
+#THROWSTAR [direction]
+#TRY [direction] ([label|command])
+#UNLOCK
+#WALK [direction]
+#ZAP [label]
+
+Specific info
+-------------
+                               ZZT           SuperZZT
+                               ---           --------
+Maximum number of boards       101           33
+Screen mode                    80x25         40x25
+Character size                 8x14          16x14 (stretched 8x14)
+Viewport size                  60x25         24x20
+Board size                     60x25         96x80
+Maximum number of flags set    10            16
+Maximum on-board objects       151           129
+
