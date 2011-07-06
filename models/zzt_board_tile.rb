@@ -1,9 +1,21 @@
-require File.dirname(__FILE__) + "/../lib/zzt_parser_utils"
+require File.dirname(__FILE__) + "/../models/zzt_base"
 
-class ZZTBoardTile
-  include ZZTParserUtils
+class ZZTBoardTile < ZZTBase
 
-  attr_accessor :cnt, :code, :code_description, :color, :ascii
+  class Code
+    attr_accessor :value, :description, :num
+    def initialize(value, description, num)
+      @value = value
+      @description = description
+      @num = num
+    end
+
+    def is_text?
+      (@num >= 47 and @num <= 61)
+    end
+  end
+
+  attr_accessor :cnt, :code, :color, :ascii
 
   COLOR = {
     "00" => "Black", 
@@ -87,29 +99,47 @@ class ZZTBoardTile
      "3D" => ["(set in colour byte)", "Grey blinking text"]
   }
 
+  def initialize(parser)
+    super
+    self.parsers << parser
+  end
+
+  def read_code_and_description #1 byte
+    code_value, code_description, code_num = parser.read_hex_array(1, false, "tile_code"){|bytes|
+      res = ZZTParserUtils.hex_to_dec(bytes.join(""))
+      
+      [bytes.join(""), CODE[bytes.join("")], res]
+    }
+
+    @code = Code.new(code, code_description, code_num)
+  end
+
+  def read_text #1 byte
+    @ascii = parser.read_hex_array(1, true, "tile_ascii"){|bytes|
+      bytes.join("").hex.chr
+    }
+  end
+
+  def read_color #1 byte
+    @color = parser.read_hex_array(1, true, "tile_color"){|bytes|
+      COLOR[bytes.join("")]
+    }
+  end
+
   def self.parse(parser)
-    tile = ZZTBoardTile.new
+    tile = ZZTBoardTile.new(parser)
 
-        tile.cnt = parser.read_number(1, false, "tile_cnt")
-        #code = parser.read_bytes(1, "tile_code")
-
-        tile.code, tile.code_description, code_num = parser.read_hex_array(1, false, "tile_code"){|bytes|
-          res = ZZTParserUtils.hex_to_dec(bytes.join(""))
-          [bytes.join(""), CODE[bytes.join("")], res]
-        }
-
-        #color = parser.read_bytes(1, false, "tile_color")
-        if(code_num >= 47 and code_num <=61)
-          tile.ascii = parser.read_hex_array(1, true, "tile_ascii"){|bytes|
-            bytes.join("").hex.chr
-          }
-        else
-          tile.color = parser.read_hex_array(1, true, "tile_color"){|bytes|
-            COLOR[bytes.join("")]
-          }
-        end
+    tile.read(:n, "cnt", 1, "tile_cnt")
+    tile.read_code_and_description #1 byte
+    
+    if(tile.code.is_text?)
+      tile.read_text
+    else
+      tile.read_color
+    end
 
     tile
   end
+
 end
 

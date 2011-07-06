@@ -1,5 +1,11 @@
 def zzt_reload
-[:ZZTObject, :ZZTBoardTile, :ZZTGameBoard, :ZZTGameHeader, :ZZTParser, :ZZTParserUtils].each{|x| 
+[:Code].each{|x|
+  begin
+    ZZTObject.send(:remove_const, x)
+  rescue
+  end
+}
+[:ZZTBase, :ZZTObject, :ZZTBoardTile, :ZZTGameBoard, :ZZTGameHeader, :ZZTParser, :ZZTParserUtils].each{|x| 
   begin
     Object.send(:remove_const, x)
   rescue
@@ -7,6 +13,7 @@ def zzt_reload
 }
 require 'ruby-debug'
 load './lib/zzt_parser_utils.rb'
+load './models/zzt_base.rb'
 load './zzt_parser.rb'
 load './models/zzt_game_header.rb'
 load './models/zzt_board_tile.rb'
