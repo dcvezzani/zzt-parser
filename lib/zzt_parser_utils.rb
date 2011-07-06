@@ -54,7 +54,9 @@ module ZZTParserUtils
     res = (block_given?) ? blk.call(res) : res
     out << "'#{res.to_s}'"
 
-    LOG.debug out.join(" - ")
+    if(label and !label.match(/raw/))
+      LOG.debug out.join(" - ") 
+    end
 
     res
   end

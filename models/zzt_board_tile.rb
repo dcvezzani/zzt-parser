@@ -100,8 +100,7 @@ class ZZTBoardTile < ZZTBase
   }
 
   def initialize(parser)
-    super
-    self.parsers << parser
+    super(parser)
   end
 
   def read_code_and_description #1 byte

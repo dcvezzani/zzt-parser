@@ -27,8 +27,7 @@ class ZZTObject < ZZTBase
 # ?     Only if this is an object/scroll: Program/text according to size
 
   def initialize(parser, object_id)
-    super
-    self.parsers << parser
+    super(parser)
     @object_id = object_id
   end
 

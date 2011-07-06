@@ -14,8 +14,7 @@ class ZZTGameBoard < ZZTBase
   attr_accessor :objects
 
   def initialize(parser, board_id)
-    super
-    self.parsers << parser
+    super(parser)
     @board_id = board_id
     @boards = {
       :north => nil, 

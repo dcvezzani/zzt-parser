@@ -7,6 +7,7 @@ class ZZTBase
 
   def initialize(*args)
     @parsers = []
+    @parsers << args.first
   end
 
   def parser
