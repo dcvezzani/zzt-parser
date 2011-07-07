@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + "/../models/zzt_base"
 
 class ZZTGameBoard < ZZTBase
 
-  attr_accessor :board_size, :title, :unk_01, :raw, :tiles
+  attr_accessor :board_size, :title, :unk_01, :tiles
   attr_accessor :board_id
   TILE_CNT = 1500 #(60*25)
 
@@ -41,9 +41,9 @@ class ZZTGameBoard < ZZTBase
 
     board.read(:bs, "title", 34, "board_title")
     board.read(:b, "unk_01", 16, "board_unk_01")
-    board.read(:b, "raw", board.board_size, "raw_board_bytes")
+    raw = board.read(:b, nil, board.board_size, "raw_board_bytes")
 
-    board.parsers <<  ZZTParser.new(board.raw)
+    board.parsers <<  ZZTParser.new(raw)
 
     tile_cnt = 0
     while(tile_cnt < 1500)

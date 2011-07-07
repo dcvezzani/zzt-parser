@@ -48,8 +48,7 @@ class ZZTGameHeader < ZZTBase
 
   def parse_flags(parser)
     @flags = (0...FLAGS_CNT).map{|x|
-      flag = read(:s, nil, 20, "flag_#{x.to_s.rjust(2, '0')}")
-      #flag = parser.read_string(20, "flag_#{x.to_s.rjust(2, '0')}")
+      flag = read(:bs, nil, 20, "flag_#{x.to_s.rjust(2, '0')}")
       flag
     }
   end

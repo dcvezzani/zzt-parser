@@ -6,7 +6,7 @@ class ZZTObject < ZZTBase
   attr_accessor :under_obj_status, :over_obj_status
   attr_accessor :under_obj_code, :under_obj_color, :unk_01
   attr_accessor :program_pos, :data_len, :binded_obj_status
-  attr_accessor :unk_02, :data, :object_id
+  attr_accessor :unk_02, :data, :obj_id
 
 # Followed by objects, creatures, etc. in the following format:
 # 1     X-coordinate on board
@@ -26,13 +26,13 @@ class ZZTObject < ZZTBase
 # 6    *Unknown
 # ?     Only if this is an object/scroll: Program/text according to size
 
-  def initialize(parser, object_id)
+  def initialize(parser, obj_id)
     super(parser)
-    @object_id = object_id
+    @obj_id = obj_id
   end
 
-  def self.parse(parser, object_id)
-    obj = ZZTObject.new(parser, object_id)
+  def self.parse(parser, obj_id)
+    obj = ZZTObject.new(parser, obj_id)
 
     obj.read(:n, "x", 1)
     obj.read(:n, "y", 1)

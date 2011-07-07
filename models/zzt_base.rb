@@ -18,6 +18,18 @@ class ZZTBase
     @parsers << parser
   end
 
+# alias_method :orig_inspect, :inspect
+# def inspect
+#   orig_inspect
+# end
+
+  def to_s
+    attrs = (self.instance_variables - [:@parsers]).inject([]){|a,b| a << "#{b}=#{self.instance_variable_get(b)}"}
+
+    "\n<#{self.class}:#{self.object_id}\n\t #{attrs.join(' ')}>"
+    #"<#{self.class}:#{self.object_id} #{(self.instance_variables - [:@parsers])}>"
+  end
+
   def read(type, attr, len, label=nil)
     label ||= attr.to_s
     res = case(type)
