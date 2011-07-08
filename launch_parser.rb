@@ -27,4 +27,4 @@ def zzt_reload(filename)
   game
 end
 
-game = zzt_reload("../town.zzt"); nil
+game = zzt_reload("../townb.zzt"); nil
