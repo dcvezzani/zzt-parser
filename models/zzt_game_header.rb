@@ -7,6 +7,8 @@ class ZZTGameHeader < ZZTBase
     :unk_01, :score_cnt, :world_title, :flags, :timer_cnt, :unk_02, \
     :saved_game
 
+  alias_method :title, :world_title
+
   KEYS = %w{blue green cyan red purple yellow white}
   FLAGS_CNT = 10
 
@@ -33,7 +35,7 @@ class ZZTGameHeader < ZZTBase
       header.read(:n, attr, 2)
     }
 
-    header.read(:s, "world_title", 20)
+    header.read(:bs, "world_title", 20)
 
     header.parse_flags(parser)
 
@@ -42,6 +44,8 @@ class ZZTGameHeader < ZZTBase
     }
     
     header.read(:n, "saved_game", 1)
+
+    header.parsers.pop()
 
     header
   end

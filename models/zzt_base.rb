@@ -29,6 +29,13 @@ class ZZTBase
     "\n<#{self.class}:#{self.object_id}\n\t #{attrs.join(' ')}>"
     #"<#{self.class}:#{self.object_id} #{(self.instance_variables - [:@parsers])}>"
   end
+  
+  def dump_yaml
+    tmp = self.clone()
+    [:parsers].each{|x| tmp.send("#{x}=", nil)}
+    #Psych.dump(tmp)
+    tmp.to_yaml
+  end
 
   def read(type, attr, len, label=nil)
     label ||= attr.to_s
@@ -45,40 +52,44 @@ class ZZTBase
     res
   end
 
+  def ignore(attr, label)
+    attr.nil? # or label.match(/^unk_/)
+  end
+
   def read_buffered_string(attr, len, label)
     res = parser.read_string(len, "#{label}")
-    self.send("#{attr}=", res) unless attr.nil?
+    self.send("#{attr}=", res) unless ignore(attr, label)
     res
   end
 
   def read_string(attr, len, label)
     res = parser.read_string(len, "#{label}", len)
-    self.send("#{attr}=", res) unless attr.nil?
+    self.send("#{attr}=", res) unless ignore(attr, label)
     res
   end
 
   def read_number(attr, len, label)
     res = parser.read_number(len, false, "#{label}")
-    self.send("#{attr}=", res) unless attr.nil?
+    self.send("#{attr}=", res) unless ignore(attr, label)
     res
   end
 
   def read_zero_based_number(attr, len, label)
     res = parser.read_number(len, true, "#{label}")
-    self.send("#{attr}=", res) unless attr.nil?
+    self.send("#{attr}=", res) unless ignore(attr, label)
     res
   end
 
   def read_boolean(attr, len, label)
     res = parser.read_number(len, false, "#{label}")
     res = (res != 0)
-    self.send("#{attr}=", res) unless attr.nil?
+    self.send("#{attr}=", res) unless ignore(attr, label)
     res
   end
 
   def read_bytes(attr, len, label)
     res = parser.read_bytes(len, "#{label}")
-    self.send("#{attr}=", res) unless attr.nil?
+    self.send("#{attr}=", res) unless ignore(attr, label)
     res
   end
 

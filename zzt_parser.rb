@@ -52,27 +52,12 @@ class ZZTParser
     @hex_array = @original_hex_array.clone()
   end
 
-  def self.parse
-    p = ZZTParser.new("/Users/davidvezzani/projects/zzt/zzt/tour.zzt")
+  def self.parse(filename = "../tour.zzt")
+    p = ZZTParser.new(filename)
 
-    zzt_game_identifier = p.read_hex_array(2, true, "zzt_file")
-
-    game_header = p.game_header = ZZTGameHeader.parse(p)
-
-#   p.game_boards = (0...p.game_header.board_cnt).map{|x|
-#     ZZTGameBoard.parse(p)
-#   }
-
-    padding_buffer_len = "200".hex - p.bytes_read
-    p.read_hex_array(padding_buffer_len, true, "padding")
-    #(0...padding_buffer_len).each{|x| p.hex_array.shift()}
-    #p.hex_array.slice!(padding_buffer_len, p.bytes_original_len)
-
-    (0...game_header.board_cnt).each{|index|
-      p.game_boards << ZZTGameBoard.parse(p, (index+1))
-    }
-
-    p
+    game = ZZTGame.parse(p)
+    File.open("object-data.txt", "w"){|f| f.write(game.object_data.join("\n"))}
+    game
   end
 end
 

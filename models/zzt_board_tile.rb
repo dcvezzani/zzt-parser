@@ -13,6 +13,20 @@ class ZZTBoardTile < ZZTBase
     def is_text?
       (@num >= 47 and @num <= 61)
     end
+
+    def to_s
+      attrs = (self.instance_variables - [:@parsers, :@value]).inject([]){|a,b| a << "#{b}=#{self.instance_variable_get(b)}"}
+
+      "<#{self.class}:#{self.object_id}\n\t #{attrs.join(' ')}>"
+    end
+
+    def to_s
+      if(@description.first.length == 2)
+        @description.last
+      else
+        @description.join(" ")
+      end
+    end
   end
 
   attr_accessor :cnt, :code, :color, :ascii
@@ -36,6 +50,9 @@ class ZZTBoardTile < ZZTBase
     "0F" => "White"
   }
     #"20" => "Gold"
+
+  CODES_WITH_PARAMETERS = %w{04 0A 0B 0C 0D 0F 10 11 1D 1E 22 23 24 25 26 27 28 29
+    2A 2C 2D}
 
   CODE = {
      "00" => ["00", "Empty Space"], 
@@ -136,6 +153,8 @@ class ZZTBoardTile < ZZTBase
     else
       tile.read_color
     end
+
+    tile.parsers.pop()
 
     tile
   end

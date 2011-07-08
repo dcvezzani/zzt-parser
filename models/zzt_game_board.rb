@@ -1,9 +1,16 @@
 require File.dirname(__FILE__) + "/../models/zzt_base"
 
+
 class ZZTGameBoard < ZZTBase
 
+  module ZZTTileExt
+    def to_s
+      "#{color} #{code}"
+    end
+  end
+
   attr_accessor :board_size, :title, :unk_01, :tiles
-  attr_accessor :board_id
+  attr_accessor :brd_id
   TILE_CNT = 1500 #(60*25)
 
   attr_accessor :shots_fired_max, :darkness, :boards
@@ -15,7 +22,7 @@ class ZZTGameBoard < ZZTBase
 
   def initialize(parser, board_id)
     super(parser)
-    @board_id = board_id
+    @brd_id = board_id
     @boards = {
       :north => nil, 
       :south => nil, 
@@ -34,6 +41,36 @@ class ZZTGameBoard < ZZTBase
     }
   end
 
+  debugger; def tile_at(x,y)
+    tile_cnt_target = (((y-1)*60) + (x-1))
+    tile_cnt = 0
+    tile = nil
+    for i in 0...@tiles.length; tile = @tiles[i]
+      break unless(tile_cnt < tile_cnt_target and tile_cnt < 1500)
+      tile_cnt += tile.cnt
+    end
+
+    tile
+  end
+
+  def item_at(x,y)
+    tile = tile_at(x,y)
+    res = (tile) ? tile.extend(ZZTTileExt).to_s : "???"
+    res
+  end
+
+  def objects_with_data
+    @objects.select{|x| x.data != nil and x.data.length > 0}.sort{|a,b| "#{a.x.to_s.rjust(2,"0")}#{a.y.to_s.rjust(2,"0")}" <=> "#{b.x.to_s.rjust(2,"0")}#{b.y.to_s.rjust(2,"0")}"}
+  end
+
+  def object_data
+    objects_with_data.map{|x| "==(#{x.obj_id.to_s.rjust(2, "0")}; pos(#{x.x.to_s.rjust(2,"0")}, #{x.y.to_s.rjust(2,"0")}))======================:
+{#{item_at(x.x, x.y)}}
+#{x.data(true)}
+=========================================
+"}
+  end
+
   def self.parse(parser, board_id)
     board = ZZTGameBoard.new(parser, board_id)
 
@@ -49,6 +86,7 @@ class ZZTGameBoard < ZZTBase
     while(tile_cnt < 1500)
       raw_tile = board.read(:b, nil, 3, "raw_tile")
       tile = ZZTBoardTile.parse(ZZTParser.new(raw_tile))
+      board.tiles << tile
       tile_cnt += tile.cnt
     end
 
@@ -71,6 +109,8 @@ class ZZTGameBoard < ZZTBase
     (0...board.object_cnt).each{|index|
       board.objects << ZZTObject.parse(board_parser, (index+1))
     }
+
+    board.parsers.pop()
 
     board
   end

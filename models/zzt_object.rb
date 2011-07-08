@@ -52,6 +52,8 @@ class ZZTObject < ZZTBase
 
     obj.read(:s, "data", obj.data_len)
 
+    obj.parsers.pop()
+
     obj
   end
 
