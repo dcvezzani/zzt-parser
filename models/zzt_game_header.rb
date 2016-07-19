@@ -19,6 +19,15 @@ class ZZTGameHeader < ZZTBase
     @flags = [0..FLAGS_CNT].map{|x| nil}
   end
 
+  def self.from_json(json)
+    header = ZZTGameHeader.allocate
+
+    [:board_cnt, :ammo_cnt, :gems_cnt, :keys, :health_cnt, :board_start, :torches_cnt, :torch_cycle_cnt, :ener_cycle_cnt, :unk_01, :score_cnt, :world_title, :flags, :timer_cnt, :unk_02, :saved_game].each do |attr|
+      header.send("#{attr}=", json[attr.to_s])
+    end
+    header
+  end
+
   def self.parse(parser)
     header = ZZTGameHeader.new(parser)
 

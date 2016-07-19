@@ -33,3 +33,9 @@ end
 game = zzt_reload("/Users/davidvezzani/DOS\ Games/Zzt.boxer/C.harddisk/zzt/CADEN.ZZT"); nil
 puts game.to_json
 
+
+debugger
+json = JSON::load(IO.read("./game.json"))
+zgame = ZZTGame.from_json(json)
+x = 2-1
+

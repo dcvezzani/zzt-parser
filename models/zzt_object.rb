@@ -31,6 +31,16 @@ class ZZTObject < ZZTBase
     @obj_id = obj_id
   end
 
+  def self.from_json(json)
+    object = ZZTObject.allocate
+
+    [:x, :y, :x_step, :y_step, :cycle, :parameters, :under_obj_status, :over_obj_status, :under_obj_code, :under_obj_color, :unk_01, :program_pos, :data_len, :binded_obj_status, :unk_02, :data, :obj_id].each do |attr|
+      object.send("#{attr}=", json[attr.to_s])
+    end
+
+    object
+  end
+  
   def self.parse(parser, obj_id)
     obj = ZZTObject.new(parser, obj_id)
 

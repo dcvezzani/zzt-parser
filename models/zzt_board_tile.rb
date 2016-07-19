@@ -120,6 +120,16 @@ class ZZTBoardTile < ZZTBase
     super(parser)
   end
 
+  def self.from_json(json)
+    tile = ZZTBoardTile.allocate
+
+    [:cnt, :code, :color, :ascii].each do |attr|
+      tile.send("#{attr}=", json[attr.to_s])
+    end
+
+    tile
+  end
+  
   def read_code_and_description #1 byte
     code_value, code_description, code_num = parser.read_hex_array(1, false, "tile_code"){|bytes|
       res = ZZTParserUtils.hex_to_dec(bytes.join(""))

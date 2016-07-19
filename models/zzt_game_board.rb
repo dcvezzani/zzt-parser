@@ -34,6 +34,24 @@ class ZZTGameBoard < ZZTBase
     @objects = []
   end
 
+  def self.from_json(json)
+    board = ZZTGameBoard.allocate
+
+    [:board_size, :boards, :title, :unk_01, :brd_id, :shots_fired_max, :darkness, :re_enter_when_zapped, :on_screen_message, :unk_02, :time_limit, :unk_03, :object_cnt, :player_x, :player_y].each do |attr|
+      board.send("#{attr}=", json[attr.to_s])
+    end
+
+    board.objects = json['objects'].map do |obj|
+      ZZTObject.from_json(obj)
+    end
+
+    board.tiles = json['tiles'].map do |tile|
+      ZZTBoardTile.from_json(tile)
+    end
+    
+    board
+  end
+  
   def to_hash
     attrs = (self.instance_variables - [:@parsers, :@tiles, :@objects]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
     {tiles: tiles.map(&:to_hash), objects: objects.map(&:to_hash)}.merge(attrs)

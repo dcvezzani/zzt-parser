@@ -17,6 +17,16 @@ class ZZTGame < ZZTBase
     attrs = to_hash
     JSON::dump(attrs)
   end
+
+  def self.from_json(json)
+    game = ZZTGame.allocate
+    game.game_id = json['game_id']
+    game.header = ZZTGameHeader.from_json(json['header'])
+    game.boards = json['boards'].map do |board|
+      ZZTGameBoard.from_json(board)
+    end
+    game
+  end
   
   def object_data
     out = []
