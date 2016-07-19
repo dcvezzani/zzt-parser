@@ -12,6 +12,7 @@ def zzt_reload(filename)
     end
   }
   require 'ruby-debug'
+  require 'json'
   load './lib/zzt_parser_utils.rb'
   load './models/zzt_base.rb'
   load './models/zzt_game.rb'
@@ -22,9 +23,13 @@ def zzt_reload(filename)
   load './models/zzt_object.rb'
 
   game = ZZTParser.parse(filename)
-  puts game.header.inspect
-  puts game.boards.first.inspect
+  # game.to_json
+  # puts game.header.inspect
+  # puts game.boards.first.inspect
   game
 end
 
-game = zzt_reload("../townb.zzt"); nil
+#game = zzt_reload("../townb.zzt"); nil
+game = zzt_reload("/Users/davidvezzani/DOS\ Games/Zzt.boxer/C.harddisk/zzt/CADEN.ZZT"); nil
+puts game.to_json
+

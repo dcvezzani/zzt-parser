@@ -23,6 +23,10 @@ class ZZTBase
 #   orig_inspect
 # end
 
+  def to_hash
+    attrs = (self.instance_variables - [:@parsers]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
+  end
+
   def to_s
     attrs = (self.instance_variables - [:@parsers]).inject([]){|a,b| a << "#{b}=#{self.instance_variable_get(b)}"}
 
@@ -54,6 +58,44 @@ class ZZTBase
 
   def ignore(attr, label)
     attr.nil? # or label.match(/^unk_/)
+  end
+
+  def write_buffered_string(attr, len, label)
+    str = self.send("#{attr}")
+    res = parser.write_number(str.length, "#{label}")
+    res = parser.write_string(str, len, "#{label}")
+    res
+  end
+
+  def write_string(attr, len, label)
+    str = self.send("#{attr}")
+    res = parser.write_string(str, nil, "#{label}")
+    res
+  end
+
+  def write_number(attr, len, label)
+    num = self.send("#{attr}")
+    res = parser.write_number(num, len, false, "#{label}")
+    res
+  end
+
+  def write_zero_based_number(attr, len, label)
+    num = self.send("#{attr}")
+    res = parser.write_number(num, len, true, "#{label}")
+    res
+  end
+
+  def write_boolean(attr, len, label)
+    tf = self.send("#{attr}")
+    num = (tf == true) ? 1 : 0
+    res = parser.write_number(num, len, false, "#{label}")
+    res
+  end
+
+  def write_bytes(attr, len, label)
+    bytes = self.send("#{attr}")
+    res = parser.write_bytes(bytes, len, "#{label}")
+    res
   end
 
   def read_buffered_string(attr, len, label)

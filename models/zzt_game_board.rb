@@ -34,6 +34,11 @@ class ZZTGameBoard < ZZTBase
     @objects = []
   end
 
+  def to_hash
+    attrs = (self.instance_variables - [:@parsers, :@tiles, :@objects]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
+    {tiles: tiles.map(&:to_hash), objects: objects.map(&:to_hash)}.merge(attrs)
+  end
+
   def read_board_size
     @board_size = parser.read_hex_array(2, true, "board_size"){|bytes|
       res = ZZTParserUtils.hex_to_dec(bytes.join(""))
@@ -41,7 +46,7 @@ class ZZTGameBoard < ZZTBase
     }
   end
 
-  debugger; def tile_at(x,y)
+  def tile_at(x,y)
     tile_cnt_target = (((y-1)*60) + (x-1))
     tile_cnt = 0
     tile = nil

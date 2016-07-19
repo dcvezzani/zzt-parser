@@ -9,6 +9,15 @@ class ZZTGame < ZZTBase
     @boards = []
   end
 
+  def to_hash
+    {game_id: game_id, header: header.to_hash, boards: boards.map(&:to_hash)}
+  end
+
+  def to_json
+    attrs = to_hash
+    JSON::dump(attrs)
+  end
+  
   def object_data
     out = []
     @boards.each{|board|
