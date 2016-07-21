@@ -15,6 +15,7 @@ class ZZTGame < ZZTBase
 
   def to_json
     attrs = to_hash
+    debugger
     JSON::dump(attrs)
   end
 

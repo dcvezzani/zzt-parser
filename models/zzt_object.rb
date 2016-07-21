@@ -44,6 +44,8 @@ class ZZTObject < ZZTBase
   def self.parse(parser, obj_id)
     obj = ZZTObject.new(parser, obj_id)
 
+    obj_start_pos = obj.parser.net_next_position
+
     obj.read(:n, "x", 1)
     obj.read(:n, "y", 1)
     obj.read(:n, "x_step", 2)
@@ -62,12 +64,43 @@ class ZZTObject < ZZTBase
 
     obj.read(:s, "data", obj.data_len)
 
+    obj.done
     obj.parsers.pop()
 
     obj
+  end
+
+  def to_bytes(parser)
+    self.parsers = [] if self.parsers.nil?
+    self.parsers << parser
+
+    self.write(:n, "x", 1)
+    self.write(:n, "y", 1)
+    self.write(:n, "x_step", 2)
+    self.write(:n, "y_step", 2)
+    self.write(:n, "cycle", 2)
+    self.write(:b, "parameters", 3)
+    self.write(:n, "under_obj_status", 2)
+    self.write(:n, "over_obj_status", 2)
+    self.write(:b, "under_obj_code", 1)
+    self.write(:b, "under_obj_color", 1)
+    self.write(:b, "unk_01", 4)
+    self.write(:n, "program_pos", 2) #don't forget to minus 1 unless FFFF
+    self.write(:n, "data_len", 2)
+    self.write(:n, "binded_obj_status", 2)
+    self.write(:b, "unk_02", 6)
+
+    self.write(:s, "data", self.data_len)
+
+    self.parsers.pop
+    parser.hex_array
   end
 
   def data(escape=false)
     (escape) ?  @data.gsub(/\r/, "\n") : @data
   end
 end
+
+=begin
+tile; tile.hex_code_values; tile.hex_code_values.length; tile.bounds
+=end

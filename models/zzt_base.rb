@@ -3,11 +3,25 @@ require File.dirname(__FILE__) + "/../lib/zzt_parser_utils"
 class ZZTBase
   include ZZTParserUtils
 
-  attr_accessor :parsers
+  attr_accessor :parsers, :origdata, :bounds
+
+  alias_method :sp, :bounds
 
   def initialize(*args)
     @parsers = []
     @parsers << args.first
+    @origdata = (args.first).instance_variable_get(:@original_hex_array).clone
+    #@_start_pos = @parsers.inject(0){|total,p| total = total + p.next_position}
+    #@_start_pos = args.first.net_next_position.last
+    @bounds = {:start => args.first.net_next_position}
+  end
+
+  def done
+    bounds[:stop] = parser.net_next_position.map{|el| el-=1}
+  end
+
+  def hex_code_values
+    origdata[(bounds[:start].first)..(bounds[:stop].first)]
   end
 
   def parser
@@ -18,17 +32,21 @@ class ZZTBase
     @parsers << parser
   end
 
+  def parser_next_position
+    parser.net_next_position.last
+  end
+
 # alias_method :orig_inspect, :inspect
 # def inspect
 #   orig_inspect
 # end
 
   def to_hash
-    attrs = (self.instance_variables - [:@parsers]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
+    attrs = (self.instance_variables - [:@parsers, :@origdata, :@bounds]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
   end
 
   def to_s
-    attrs = (self.instance_variables - [:@parsers]).inject([]){|a,b| a << "#{b}=#{self.instance_variable_get(b)}"}
+    attrs = (self.instance_variables - [:@parsers, :@origdata, :@bounds]).inject([]){|a,b| a << "#{b}=#{self.instance_variable_get(b)}"}
 
     "\n<#{self.class}:#{self.object_id}\n\t #{attrs.join(' ')}>"
     #"<#{self.class}:#{self.object_id} #{(self.instance_variables - [:@parsers])}>"
@@ -56,44 +74,64 @@ class ZZTBase
     res
   end
 
+  def write(type, attr, len, label=nil)
+    label ||= attr.to_s
+    res = case(type)
+    when :string, :s  then write_string(attr, len, label)
+    when :buffered_string, :bs  then write_buffered_string(attr, len, label)
+    when :number, :n  then write_number(attr, len, label)
+    when :zero_based_number, :n0  then write_zero_based_number(attr, len, label)
+    when :bytes,  :b  then write_bytes(attr, len, label)
+    when :boolean,  :tf  then write_boolean(attr, len, label)
+    end
+
+    #self.send(attr)
+    res
+  end
+
   def ignore(attr, label)
     attr.nil? # or label.match(/^unk_/)
   end
 
   def write_buffered_string(attr, len, label)
     str = self.send("#{attr}")
-    res = parser.write_number(str.length, "#{label}")
+
+    res = parser.write_number(str.length, len, "#{label}")
     res = parser.write_string(str, len, "#{label}")
     res
   end
 
   def write_string(attr, len, label)
     str = self.send("#{attr}")
-    res = parser.write_string(str, nil, "#{label}")
+
+    res = parser.write_string(str, len, "#{label}")
     res
   end
 
-  def write_number(attr, len, label)
+  def write_number(attr, len, label, options={zero_based: false})
     num = self.send("#{attr}")
-    res = parser.write_number(num, len, false, "#{label}")
+
+    res = parser.write_number(num, len, "#{label}", options)
     res
   end
 
-  def write_zero_based_number(attr, len, label)
+  def write_zero_based_number(attr, len, label, options={zero_based: true})
     num = self.send("#{attr}")
-    res = parser.write_number(num, len, true, "#{label}")
+
+    res = parser.write_number(num, len, "#{label}", options)
     res
   end
 
   def write_boolean(attr, len, label)
     tf = self.send("#{attr}")
     num = (tf == true) ? 1 : 0
-    res = parser.write_number(num, len, false, "#{label}")
+    res = parser.write_number(num, len, "#{label}")
     res
   end
 
   def write_bytes(attr, len, label)
     bytes = self.send("#{attr}")
+
     res = parser.write_bytes(bytes, len, "#{label}")
     res
   end

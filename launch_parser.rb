@@ -22,6 +22,7 @@ def zzt_reload(filename)
   load './models/zzt_game_board.rb'
   load './models/zzt_object.rb'
 
+debugger
   game = ZZTParser.parse(filename)
   # game.to_json
   # puts game.header.inspect
@@ -30,12 +31,29 @@ def zzt_reload(filename)
 end
 
 #game = zzt_reload("../townb.zzt"); nil
-game = zzt_reload("/Users/davidvezzani/DOS\ Games/Zzt.boxer/C.harddisk/zzt/CADEN.ZZT"); nil
+game = zzt_reload("/Users/davidvezzani/DOS\ Games/Zzt.boxer/C.harddisk/zzt/MYHOUSE.ZZT"); nil
+File.open("game.json", "w"){|f| f.write game.to_json}
 puts game.to_json
 
 
-debugger
 json = JSON::load(IO.read("./game.json"))
 zgame = ZZTGame.from_json(json)
+
+debugger
+obj_parser = ZZTParser.new([])
+zgame.boards.last.objects[1].to_bytes(obj_parser)
+
+tile_parser = ZZTParser.new([])
+zgame.boards.last.tiles[0].parsers = [ZZTParser.allocate]
+zgame.boards.last.tiles[0].parser.hex_array = []
+zgame.boards.last.tiles[0].to_bytes(tile_parser)
+
+board_parser = ZZTParser.new([])
+zgame.boards.last.to_bytes(board_parser)
 x = 2-1
 
+
+
+=begin
+obj.data; obj.data_len; obj.hex_code_values; obj.hex_code_values.length; obj.bounds
+=end

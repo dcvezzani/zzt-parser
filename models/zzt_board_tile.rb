@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + "/../models/zzt_base"
 
 class ZZTBoardTile < ZZTBase
 
-  class Code
+  class Code < ZZTBase
     attr_accessor :value, :description, :num
     def initialize(value, description, num)
       @value = value
@@ -15,17 +15,18 @@ class ZZTBoardTile < ZZTBase
     end
 
     def to_s
-      attrs = (self.instance_variables - [:@parsers, :@value]).inject([]){|a,b| a << "#{b}=#{self.instance_variable_get(b)}"}
+      attrs = (self.instance_variables - [:@parsers, :@value, :@origdata, :@bounds]).inject([]){|a,b| a << "#{b}=#{self.instance_variable_get(b)}"}
 
       "<#{self.class}:#{self.object_id}\n\t #{attrs.join(' ')}>"
     end
 
     def to_s
-      if(@description.first.length == 2)
-        @description.last
-      else
-        @description.join(" ")
-      end
+      # if(@description.first.length == 2)
+      #   @description.last
+      # else
+      #   @description.join(" ")
+      # end
+      @description.last
     end
   end
 
@@ -120,12 +121,19 @@ class ZZTBoardTile < ZZTBase
     super(parser)
   end
 
+  def to_hash
+    attrs = (self.instance_variables - [:@parsers, :@code, :@origdata, :@bounds]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
+    {code: code.to_hash}.merge(attrs)
+  end
+  
   def self.from_json(json)
     tile = ZZTBoardTile.allocate
 
-    [:cnt, :code, :color, :ascii].each do |attr|
+    [:cnt, :color, :ascii].each do |attr|
       tile.send("#{attr}=", json[attr.to_s])
     end
+
+    tile.code = Code.new(json['code']['value'], json['code']['description'], json['code']['num'])
 
     tile
   end
@@ -137,7 +145,7 @@ class ZZTBoardTile < ZZTBase
       [bytes.join(""), CODE[bytes.join("")], res]
     }
 
-    @code = Code.new(code, code_description, code_num)
+    @code = Code.new(code_value, code_description, code_num)
   end
 
   def read_text #1 byte
@@ -152,10 +160,25 @@ class ZZTBoardTile < ZZTBase
     }
   end
 
+  def hval(attr)
+    val = self.send("#{attr}")
+    chk = case(attr)
+      #when :code then CODE.select{|k,v| v.last == val}.keys.first
+      when :code then self.code.value
+      when :color then COLOR.select{|k,v| v == val}.keys.first
+    end
+
+    debugger if chk.nil?
+    chk = '00' if chk.nil?
+
+    chk
+  end
+
   def self.parse(parser)
     tile = ZZTBoardTile.new(parser)
 
     tile.read(:n, "cnt", 1, "tile_cnt")
+
     tile.read_code_and_description #1 byte
     
     if(tile.code.is_text?)
@@ -164,9 +187,30 @@ class ZZTBoardTile < ZZTBase
       tile.read_color
     end
 
+    tile.done
     tile.parsers.pop()
 
     tile
+  end
+
+  def code_bytes; [hval(:code)]; end
+  def color_bytes; [hval(:color)]; end
+
+  def to_bytes(parser)
+    self.parsers = [] if self.parsers.nil?
+    self.parsers << parser
+
+    self.write(:n, "cnt", 1, "tile_cnt")
+    self.write(:b, "code_bytes", 1, "tile_code")
+    
+    if self.ascii
+      self.write(:s, "ascii", 1, "tile_ascii")
+    else
+      self.write(:b, "color_bytes", 1, "tile_color")
+    end
+
+    self.parsers.pop
+    parser.hex_array
   end
 
 end

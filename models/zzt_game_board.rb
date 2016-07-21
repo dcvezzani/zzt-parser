@@ -53,7 +53,7 @@ class ZZTGameBoard < ZZTBase
   end
   
   def to_hash
-    attrs = (self.instance_variables - [:@parsers, :@tiles, :@objects]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
+    attrs = (self.instance_variables - [:@parsers, :@tiles, :@objects, :@origdata, :@bounds]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
     {tiles: tiles.map(&:to_hash), objects: objects.map(&:to_hash)}.merge(attrs)
   end
 
@@ -95,20 +95,26 @@ class ZZTGameBoard < ZZTBase
   end
 
   def self.parse(parser, board_id)
+    debugger
     board = ZZTGameBoard.new(parser, board_id)
 
     board.read_board_size
 
     board.read(:bs, "title", 34, "board_title")
     board.read(:b, "unk_01", 16, "board_unk_01")
+
+    raw_board_bytes_offset = board.parser_next_position
     raw = board.read(:b, nil, board.board_size, "raw_board_bytes")
 
-    board.parsers <<  ZZTParser.new(raw)
+    board.parsers <<  ZZTParser.new(raw, {offset: raw_board_bytes_offset})
 
     tile_cnt = 0
+    tile_parser = nil
     while(tile_cnt < 1500)
+      raw_tile_offset = board.parser_next_position
       raw_tile = board.read(:b, nil, 3, "raw_tile")
-      tile = ZZTBoardTile.parse(ZZTParser.new(raw_tile))
+      tile_parser = ZZTParser.new(raw_tile, {offset: raw_tile_offset})
+      tile = ZZTBoardTile.parse(tile_parser)
       board.tiles << tile
       tile_cnt += tile.cnt
     end
@@ -138,4 +144,79 @@ class ZZTGameBoard < ZZTBase
     board
   end
 
+  def title_length
+    self.title.length
+  end
+
+  def blank_place_holder
+    ['00']
+  end
+
+  def board_north; self.boards['north']; end
+  def board_south; self.boards['south']; end
+  def board_west; self.boards['west']; end
+  def board_east; self.boards['east']; end
+
+  def to_bytes(parser)
+    self.parsers = [] if self.parsers.nil?
+    self.parsers << parser
+
+    #self.write(:n, "board_size_blank", 2, "board_size_placeholder")
+    self.write(:n, "title_length", 1)
+    self.write(:s, "title", 34)
+    self.write(:b, "unk_01", 16, "unk_01_padding")
+
+    # get tiles
+    tile_parser = ZZTParser.new([])
+    self.tiles.each do |tile|
+      tile.to_bytes(tile_parser)
+      #debugger if tile_parser.hex_array.include?(nil)
+    end
+    parser.write_bytes_raw(tile_parser.hex_array, "tiles")
+
+    self.write(:n, "shots_fired_max", 1)
+    self.write(:tf, "darkness", 1)
+    
+    [:north, :south, :west, :east].each{|dir|
+      self.write(:n, "board_#{dir}", 1, "board_dir_#{dir}") 
+    }
+    
+    self.write(:n, "re_enter_when_zapped", 1)
+    self.write(:bs, "on_screen_message", 58)
+    self.write(:n, "player_x", 1)
+    self.write(:n, "player_y", 1)
+    self.write(:n, "time_limit", 2)
+    self.write(:n, "unk_02", 16)
+    self.write(:n0, "object_cnt", 2)
+    
+    # get objects
+    obj_parser = ZZTParser.new([])
+    self.objects.each do |obj|
+      obj.to_bytes(obj_parser)
+    end
+    parser.write_bytes_raw(obj_parser.hex_array, "objects")
+
+    board_size = self.parser.hex_array.length
+    board_size_bytes = ZZTParserUtils.dec_to_hex(board_size, 2)
+    board_size_bytes.reverse.map{|byte| parser.hex_array.unshift(byte)}
+
+    self.parsers.pop
+    parser.hex_array
+  end
+
 end
+
+=begin
+
+  attr_accessor :board_size, :title, :unk_01, :tiles
+  attr_accessor :brd_id
+  TILE_CNT = 1500 #(60*25)
+
+  attr_accessor :shots_fired_max, :darkness, :boards
+  attr_accessor :re_enter_when_zapped
+  attr_accessor :on_screen_message, :unk_02, :time_limit
+  attr_accessor :unk_03, :object_cnt
+  attr_accessor :player_x, :player_y
+  attr_accessor :objects
+
+=end

@@ -10,12 +10,17 @@ require "ruby-debug"
 
 class ZZTParser
   include ZZTParserUtils
-  attr_accessor :game_file, :hex_array, :game_header, :game_boards
+  attr_accessor :game_file, :hex_array, :game_header, :game_boards, :next_position
+  attr_reader :original_hex_array, :offset_position
 
-  def initialize(arg)
+  alias_method :np, :next_position
+
+  def initialize(arg, options={})
     @game_header = nil
     @content = nil
     @game_boards = []
+    @next_position = 0
+    @offset_position = (options[:offset] or 0)
 
     if(arg.is_a?(Array))
       @original_hex_array = arg
@@ -26,6 +31,14 @@ class ZZTParser
 
     reset
     self
+  end
+
+  def net_next_position
+    [@next_position, @offset_position, @next_position + @offset_position]
+  end
+
+  def write_bytes_raw(bytes, label)
+    self.write_bytes(bytes, bytes.length, "#{label}")
   end
 
   def bytes_read

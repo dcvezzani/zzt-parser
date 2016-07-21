@@ -1,0 +1,36 @@
+
+>>> [0]Title screen <<<
+
+
+>>> [1]Main <<<
+==(02; pos(27, 12))======================:
+{Light yellow Object}
+@garbage_man
+#end
+
+:touch
+Do you have some trash?  I can take it.
+#end
+
+=========================================
+
+==(03; pos(30, 10))======================:
+{Light yellow Object}
+@yard_man
+#end
+
+=========================================
+
+==(05; pos(30, 14))======================:
+{Light yellow Object}
+@house_cleaner
+#end
+
+=========================================
+
+==(04; pos(33, 12))======================:
+{Light yellow Object}
+@car_wash
+#end
+
+=========================================
