@@ -72,4 +72,41 @@ class ZZTGameHeader < ZZTBase
       hash.merge(color.to_sym() => player_has_key)
     }
   end
+
+  def to_bytes(parser)
+    self.parsers = [] if self.parsers.nil?
+    self.parsers << parser
+
+
+    self.write(:n0, "board_cnt", 2)
+
+    %w{ammo_cnt gems_cnt}.each{|attr|
+      self.write(:n, attr, 2)
+    }
+
+    KEYS.each do |color|
+      self.write(:tf, nil, 1, "key_#{color}"){ self.keys[color] }
+    end
+    
+    %w{health_cnt board_start 
+      torches_cnt torch_cycle_cnt ener_cycle_cnt unk_01 score_cnt}.each{|attr|
+      self.write(:n, attr, 2)
+    }
+    
+    self.write(:bs, "world_title", 20)
+
+    (0...FLAGS_CNT).map do |flg|
+      self.write(:bs, nil, 20, "flag_#{flg.to_s.rjust(2, '0')}"){ self.flags[flg] }
+    end
+    
+    %w{timer_cnt unk_02}.each{|attr|
+      self.write(:n, attr, 2)
+    }
+    
+    self.write(:n, "saved_game", 1)
+
+    self.parsers.pop
+    parser.hex_array
+  end
+  
 end

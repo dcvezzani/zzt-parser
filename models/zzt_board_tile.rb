@@ -168,7 +168,7 @@ class ZZTBoardTile < ZZTBase
       when :color then COLOR.select{|k,v| v == val}.keys.first
     end
 
-    debugger if chk.nil?
+    #debugger if chk.nil?
     chk = '00' if chk.nil?
 
     chk
@@ -187,7 +187,7 @@ class ZZTBoardTile < ZZTBase
       tile.read_color
     end
 
-    tile.done
+    # tile.done
     tile.parsers.pop()
 
     tile

@@ -95,7 +95,6 @@ class ZZTGameBoard < ZZTBase
   end
 
   def self.parse(parser, board_id)
-    debugger
     board = ZZTGameBoard.new(parser, board_id)
 
     board.read_board_size
@@ -103,17 +102,17 @@ class ZZTGameBoard < ZZTBase
     board.read(:bs, "title", 34, "board_title")
     board.read(:b, "unk_01", 16, "board_unk_01")
 
-    raw_board_bytes_offset = board.parser_next_position
+    # raw_board_bytes_offset = board.parser_next_position
     raw = board.read(:b, nil, board.board_size, "raw_board_bytes")
 
-    board.parsers <<  ZZTParser.new(raw, {offset: raw_board_bytes_offset})
+    board.parsers <<  ZZTParser.new(raw)
 
     tile_cnt = 0
     tile_parser = nil
+    board.abs_position(:r)
     while(tile_cnt < 1500)
-      raw_tile_offset = board.parser_next_position
       raw_tile = board.read(:b, nil, 3, "raw_tile")
-      tile_parser = ZZTParser.new(raw_tile, {offset: raw_tile_offset})
+      tile_parser = ZZTParser.new(raw_tile)
       tile = ZZTBoardTile.parse(tile_parser)
       board.tiles << tile
       tile_cnt += tile.cnt
@@ -134,13 +133,13 @@ class ZZTGameBoard < ZZTBase
     board.read(:n, "unk_02", 16)
     board.read(:n0, "object_cnt", 2)
 
-    board_parser = board.parsers.pop()
+    offset = board.parser.br.length
     (0...board.object_cnt).each{|index|
-      board.objects << ZZTObject.parse(board_parser, (index+1))
+      board.objects << ZZTObject.parse(board.parser, (index+1))
+      board.parser.br(offset: offset)
     }
 
     board.parsers.pop()
-
     board
   end
 
@@ -187,6 +186,8 @@ class ZZTGameBoard < ZZTBase
     self.write(:n, "player_y", 1)
     self.write(:n, "time_limit", 2)
     self.write(:n, "unk_02", 16)
+
+    self.object_cnt = self.objects.length
     self.write(:n0, "object_cnt", 2)
     
     # get objects
@@ -197,8 +198,11 @@ class ZZTGameBoard < ZZTBase
     parser.write_bytes_raw(obj_parser.hex_array, "objects")
 
     board_size = self.parser.hex_array.length
+    #board_size = self.parser.hex_array.slice(parser.offset_position, self.parser.hex_array.length).length
     board_size_bytes = ZZTParserUtils.dec_to_hex(board_size, 2)
-    board_size_bytes.reverse.map{|byte| parser.hex_array.unshift(byte)}
+    board_size_bytes.map{|byte| parser.hex_array.unshift(byte)}
+
+    #parser.offset_position = parser.hex_array.length
 
     self.parsers.pop
     parser.hex_array

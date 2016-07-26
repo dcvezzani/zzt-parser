@@ -10,17 +10,16 @@ require "ruby-debug"
 
 class ZZTParser
   include ZZTParserUtils
-  attr_accessor :game_file, :hex_array, :game_header, :game_boards, :next_position
-  attr_reader :original_hex_array, :offset_position
+  attr_accessor :game_file, :hex_array, :game_header, :game_boards
+  attr_reader :original_hex_array
 
-  alias_method :np, :next_position
+  alias_method :ha, :hex_array
 
   def initialize(arg, options={})
     @game_header = nil
     @content = nil
     @game_boards = []
-    @next_position = 0
-    @offset_position = (options[:offset] or 0)
+    #@offset_position = (options[:offset] or 0)
 
     if(arg.is_a?(Array))
       @original_hex_array = arg
@@ -33,17 +32,22 @@ class ZZTParser
     self
   end
 
-  def net_next_position
-    [@next_position, @offset_position, @next_position + @offset_position]
-  end
-
   def write_bytes_raw(bytes, label)
     self.write_bytes(bytes, bytes.length, "#{label}")
   end
 
-  def bytes_read
-    (@original_hex_array.length - @hex_array.length)
+  def bytes_read(options={offset: 0})
+    res = self.original_hex_array.slice(0, self.original_hex_array.length - self.hex_array.length)    
+    res = res.slice(options[:offset], res.length) if options[:offset] > 0
+    res
   end
+
+  def bytes_written
+    self.hex_array
+  end
+
+  alias_method :br, :bytes_read
+  alias_method :bw, :bytes_written
 
   def bytes_original_len
     @original_hex_array.length
@@ -59,6 +63,12 @@ class ZZTParser
 
     # now parse @header to hex array  
     @original_hex_array = @content.each_byte.collect {|val| "%02X" % val}  
+  end
+
+  def save_file(game_file="#{@game_file}.NEW")
+    File.open(game_file,"wb") do |f|  
+      f.write(@hex_array.map { |x| x.hex.chr }.join)
+    end
   end
 
   def reset

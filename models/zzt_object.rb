@@ -2,11 +2,41 @@ require File.dirname(__FILE__) + "/../models/zzt_base"
 
 class ZZTObject < ZZTBase
 
-  attr_accessor :x, :y, :x_step, :y_step, :cycle, :parameters
+  attr_accessor :x, :y, :x_step, :y_step, :cycle, :p1, :p2, :p3
   attr_accessor :under_obj_status, :over_obj_status
-  attr_accessor :under_obj_code, :under_obj_color, :unk_01
+  attr_accessor :under_obj_code, :under_obj_color, :pointer
   attr_accessor :program_pos, :data_len, :binded_obj_status
   attr_accessor :unk_02, :data, :obj_id
+
+  def self.inherited(child)
+    child.instance_eval do
+      def attr_active(*args)
+        @attrs_active = [] if @attrs_active.nil?
+        clean_attrs = args.select{|attr| 
+          [:x, :y, :x_step, :y_step, :cycle, :p1, :p2, :p3, :under_obj_status, :over_obj_status, :under_obj_code, :under_obj_color, :pointer, :program_pos, :data_len, :binded_obj_status, :unk_02, :data, :obj_id].include? attr}
+
+        @attrs_active.concat(clean_attrs)
+      end
+    end
+
+    child.class_eval do
+      def to_json
+        {"#{self.class.name}::#{self.object_id}" => (self.class.attrs_active.inject({}){|hash, attr|
+          hash.merge!({attr => self.send(attr)})
+        })}.to_json
+      end
+
+      def to_s
+        attrs = self.class.attrs_active.map{|attr| "@#{attr}".to_sym}.inject([]){|a,b| a << "#{b}=#{self.instance_variable_get(b)}"}
+        "\n<#{self.class}:#{self.object_id}\n\t #{attrs.join(' ')}>"
+      end
+          
+    end
+
+    class << child
+      attr_accessor :attrs_active
+    end
+  end
 
 # Followed by objects, creatures, etc. in the following format:
 # 1     X-coordinate on board
@@ -34,7 +64,7 @@ class ZZTObject < ZZTBase
   def self.from_json(json)
     object = ZZTObject.allocate
 
-    [:x, :y, :x_step, :y_step, :cycle, :parameters, :under_obj_status, :over_obj_status, :under_obj_code, :under_obj_color, :unk_01, :program_pos, :data_len, :binded_obj_status, :unk_02, :data, :obj_id].each do |attr|
+    [:x, :y, :x_step, :y_step, :cycle, :p1, :p2, :p3, :under_obj_status, :over_obj_status, :under_obj_code, :under_obj_color, :pointer, :program_pos, :data_len, :binded_obj_status, :unk_02, :data, :obj_id].each do |attr|
       object.send("#{attr}=", json[attr.to_s])
     end
 
@@ -44,19 +74,19 @@ class ZZTObject < ZZTBase
   def self.parse(parser, obj_id)
     obj = ZZTObject.new(parser, obj_id)
 
-    obj_start_pos = obj.parser.net_next_position
-
     obj.read(:n, "x", 1)
     obj.read(:n, "y", 1)
     obj.read(:n, "x_step", 2)
     obj.read(:n, "y_step", 2)
     obj.read(:n, "cycle", 2)
-    obj.read(:b, "parameters", 3)
-    obj.read(:n, "under_obj_status", 2)
-    obj.read(:n, "over_obj_status", 2)
+    obj.read(:n, "p1", 1)
+    obj.read(:n, "p2", 1)
+    obj.read(:n, "p3", 1)
+    obj.read(:b, "under_obj_status", 2)
+    obj.read(:b, "over_obj_status", 2)
     obj.read(:b, "under_obj_code", 1)
     obj.read(:b, "under_obj_color", 1)
-    obj.read(:b, "unk_01", 4)
+    obj.read(:b, "pointer", 4)
     obj.read(:n, "program_pos", 2) #don't forget to minus 1 unless FFFF
     obj.read(:n, "data_len", 2)
     obj.read(:n, "binded_obj_status", 2)
@@ -64,7 +94,6 @@ class ZZTObject < ZZTBase
 
     obj.read(:s, "data", obj.data_len)
 
-    obj.done
     obj.parsers.pop()
 
     obj
@@ -79,13 +108,17 @@ class ZZTObject < ZZTBase
     self.write(:n, "x_step", 2)
     self.write(:n, "y_step", 2)
     self.write(:n, "cycle", 2)
-    self.write(:b, "parameters", 3)
-    self.write(:n, "under_obj_status", 2)
-    self.write(:n, "over_obj_status", 2)
+    self.write(:n, "p1", 1)
+    self.write(:n, "p2", 1)
+    self.write(:n, "p3", 1)
+    self.write(:b, "under_obj_status", 2)
+    self.write(:b, "over_obj_status", 2)
     self.write(:b, "under_obj_code", 1)
     self.write(:b, "under_obj_color", 1)
-    self.write(:b, "unk_01", 4)
+    self.write(:b, "pointer", 4)
     self.write(:n, "program_pos", 2) #don't forget to minus 1 unless FFFF
+
+    self.data_len = ((self.data and self.data.length) or 0)
     self.write(:n, "data_len", 2)
     self.write(:n, "binded_obj_status", 2)
     self.write(:b, "unk_02", 6)
@@ -100,7 +133,3 @@ class ZZTObject < ZZTBase
     (escape) ?  @data.gsub(/\r/, "\n") : @data
   end
 end
-
-=begin
-tile; tile.hex_code_values; tile.hex_code_values.length; tile.bounds
-=end

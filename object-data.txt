@@ -3,6 +3,12 @@
 
 
 >>> [1]Main <<<
+==(06; pos(26, 09))======================:
+{White Scroll}
+Good stuff!
+
+=========================================
+
 ==(02; pos(27, 12))======================:
 {Light yellow Object}
 @garbage_man
@@ -26,6 +32,9 @@ Do you have some trash?  I can take it.
 @house_cleaner
 #end
 
+:touch
+What do you want cleaned?
+#end
 =========================================
 
 ==(04; pos(33, 12))======================:
@@ -33,4 +42,9 @@ Do you have some trash?  I can take it.
 @car_wash
 #end
 
+=========================================
+
+==(07; pos(40, 15))======================:
+{Light yellow Normal}
+Greetings, program!
 =========================================
