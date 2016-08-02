@@ -133,3 +133,7 @@ class ZZTObject < ZZTBase
     (escape) ?  @data.gsub(/\r/, "\n") : @data
   end
 end
+
+
+
+
