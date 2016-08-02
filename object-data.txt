@@ -32,9 +32,6 @@ Do you have some trash?  I can take it.
 @house_cleaner
 #end
 
-:touch
-What do you want cleaned?
-#end
 =========================================
 
 ==(04; pos(33, 12))======================:
@@ -42,9 +39,4 @@ What do you want cleaned?
 @car_wash
 #end
 
-=========================================
-
-==(07; pos(40, 15))======================:
-{Light yellow Normal}
-Greetings, program!
 =========================================

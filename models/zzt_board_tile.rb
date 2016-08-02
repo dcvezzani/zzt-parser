@@ -121,6 +121,12 @@ class ZZTBoardTile < ZZTBase
     super(parser)
   end
 
+  def <=>(other)
+    ((self.code.value == other.code.value) and
+       (self.color == other.color) and
+       (self.ascii == other.ascii))
+  end
+
   def to_hash
     attrs = (self.instance_variables - [:@parsers, :@code, :@origdata, :@bounds]).inject({}){|a,b| a.merge!({b.to_s.slice(1,b.to_s.length) => self.instance_variable_get(b)})}
     {code: code.to_hash}.merge(attrs)

@@ -156,6 +156,14 @@ class ZZTGameBoard < ZZTBase
   def board_west; self.boards['west']; end
   def board_east; self.boards['east']; end
 
+  def grid_reset
+    @board_tile_grid = nil
+  end
+
+  def tiles_to_grid
+    @board_tile_grid ||= ZZTBoardTiles.new(self.tiles)
+  end
+
   def to_bytes(parser)
     self.parsers = [] if self.parsers.nil?
     self.parsers << parser
